@@ -1,0 +1,23 @@
+# --- Node / React ---
+node_modules/
+frontend/dist/
+npm-debug.log*
+
+# --- Java / Maven ---
+backend/target/
+*.class
+
+# Giao dien da build, duoc sinh lai bang dong-goi.ps1
+backend/src/main/resources/static/
+
+# --- Arduino ---
+arduino/**/build/
+
+# --- Thong tin dang nhap, khong dua len GitHub ---
+mqtt/passwd
+
+# --- He dieu hanh / IDE ---
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

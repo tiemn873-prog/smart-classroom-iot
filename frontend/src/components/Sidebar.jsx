@@ -1,7 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { IconBulb, IconGrid } from './Icons.jsx'
+import { IconBulb, IconDatabase, IconGrid } from './Icons.jsx'
 
-const NAV_ITEMS = [{ to: '/dashboard', label: 'Bảng điều khiển', icon: IconGrid }]
+const NAV_ITEMS = [
+  { to: '/dashboard', label: 'Bảng điều khiển', icon: IconGrid },
+  { to: '/data-sensor', label: 'Dữ liệu cảm biến', icon: IconDatabase },
+]
 
 export default function Sidebar() {
   return (

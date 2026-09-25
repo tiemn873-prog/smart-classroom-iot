@@ -20,10 +20,14 @@ const AXIS_COLOR = '#6b7787'
 const GRID_COLOR = '#e8ecf3'
 
 export default function Dashboard() {
-  const { latest, readings, devices, hardwareOnline, pendingDeviceIds, loading, error, clearError, toggleDevice } =
+  const { latest, readings, devices, hardwareOnline, pendingDeviceIds, loading, error, clearError, toggleDevice, toggleAll } =
     useAppStore()
 
   const chartData = readings.map((r) => ({ ...r, clock: formatClock(r.time) }))
+
+  // Công tắc tổng chỉ ở trạng thái bật khi TẤT CẢ thiết bị đang bật
+  const allOn = devices.length > 0 && devices.every((d) => d.currentState === 'ON')
+  const anyPending = pendingDeviceIds.length > 0
 
   return (
     <>
@@ -148,6 +152,24 @@ export default function Dashboard() {
           ))}
         </div>
       </section>
+
+      <div className="section-head">
+        <h2 className="section-title">Điều khiển thiết bị</h2>
+        <div className="master-switch">
+          <span className="switch-label">Bật toàn bộ</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={allOn}
+            aria-label="Bật hoặc tắt toàn bộ thiết bị"
+            className={'switch' + (allOn ? ' on' : '') + (anyPending ? ' pending' : '')}
+            disabled={anyPending || devices.length === 0}
+            onClick={() => toggleAll(!allOn)}
+          >
+            <span className="knob" />
+          </button>
+        </div>
+      </div>
 
       <section className="device-grid">
         {devices.map((device) => {

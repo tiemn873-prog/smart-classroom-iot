@@ -4,7 +4,6 @@ import { IconSearch } from '../components/Icons.jsx'
 import { SENSOR_TYPES, formatDateTime, formatValue } from '../data/labels.js'
 import { api } from '../api/client.js'
 
-const PAGE_SIZE = 10
 const EMPTY_FILTER = { keyword: '', sensorType: 'ALL', sort: 'DESC' }
 const EMPTY_PAGE = { items: [], total: 0, totalPages: 1 }
 
@@ -12,6 +11,8 @@ export default function DataSensor() {
   const [draft, setDraft] = useState(EMPTY_FILTER)
   const [applied, setApplied] = useState(EMPTY_FILTER)
   const [page, setPage] = useState(1)
+  const [size, setSize] = useState(10)
+  const [sizeInput, setSizeInput] = useState('10')
   const [data, setData] = useState(EMPTY_PAGE)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,7 +23,7 @@ export default function DataSensor() {
     setLoading(true)
 
     api
-      .getSensors({ ...applied, page, size: PAGE_SIZE })
+      .getSensors({ ...applied, page, size })
       .then((result) => {
         if (cancelled) return
         setData(result)
@@ -40,7 +41,7 @@ export default function DataSensor() {
     return () => {
       cancelled = true
     }
-  }, [applied, page])
+  }, [applied, page, size])
 
   const update = (field) => (e) => setDraft((d) => ({ ...d, [field]: e.target.value }))
 
@@ -48,6 +49,22 @@ export default function DataSensor() {
     e.preventDefault()
     setApplied(draft)
     setPage(1)
+  }
+
+  /* Người dùng gõ số tuỳ ý rồi Enter hoặc bấm ra ngoài thì mới áp dụng.
+     Chặn trong khoảng 1..200 vì Backend cũng giới hạn tối đa 200 dòng. */
+  const applySize = () => {
+    const n = Number(sizeInput)
+    if (!Number.isFinite(n) || n < 1) {
+      setSizeInput(String(size))
+      return
+    }
+    const hopLe = Math.min(Math.trunc(n), 200)
+    setSizeInput(String(hopLe))
+    if (hopLe !== size) {
+      setSize(hopLe)
+      setPage(1)
+    }
   }
 
   return (
@@ -62,7 +79,7 @@ export default function DataSensor() {
         <div className="filter-row">
           <label className="search-box">
             <IconSearch width={15} height={15} />
-            <input type="text" placeholder="Tìm kiếm dữ liệu..." value={draft.keyword} onChange={update('keyword')} />
+            <input type="text" placeholder="Tìm theo thời gian hoặc giá trị..." value={draft.keyword} onChange={update('keyword')} />
           </label>
           <select value={draft.sensorType} onChange={update('sensorType')} aria-label="Loại cảm biến">
             <option value="ALL">Tất cả loại cảm biến</option>
@@ -122,7 +139,26 @@ export default function DataSensor() {
 
         <div className="table-footer">
           <span>
-            Hiển thị {data.items.length} của {data.total}
+            Tổng cộng <strong>{data.total}</strong> bản ghi
+            <label className="page-size">
+              Hiển thị
+              <input
+                type="number"
+                min="1"
+                max="200"
+                value={sizeInput}
+                onChange={(e) => setSizeInput(e.target.value)}
+                onBlur={applySize}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    applySize()
+                  }
+                }}
+                aria-label="Số dòng mỗi trang"
+              />
+              / trang
+            </label>
           </span>
           <Pagination page={page} totalPages={Math.max(1, data.totalPages)} onChange={setPage} />
         </div>

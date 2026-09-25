@@ -29,6 +29,10 @@ export function AppStoreProvider({ children }) {
   const pendingRef = useRef(pendingDeviceIds)
   pendingRef.current = pendingDeviceIds
 
+  // Giu danh sach thiet bi moi nhat de ham bat/tat toan bo doc duoc
+  const devicesRef = useRef(devices)
+  devicesRef.current = devices
+
   // Nap trang thai ban dau: buoc 2-6 Hinh 4 va so do moi nhat cho bieu do
   useEffect(() => {
     let cancelled = false
@@ -115,6 +119,40 @@ export function AppStoreProvider({ children }) {
     }
   }, [])
 
+  /* Bat hoac tat toan bo thiet bi cung luc.
+     Gui song song bang Promise.all chu khong gui lan luot: hai lenh roi
+     may gan nhu cung mot thoi diem nen hai den doi trang thai gan nhu
+     dong thoi, mat thuong khong thay lech. */
+  const toggleAll = useCallback(async (turnOn) => {
+    const command = turnOn ? 'TURN_ON' : 'TURN_OFF'
+    // Chi gui cho thiet bi dang khac trang thai mong muon, khoi gui lenh thua
+    const targets = devicesRef.current.filter((d) => (d.currentState === 'ON') !== turnOn)
+    if (targets.length === 0) return
+
+    const ids = targets.map((d) => d.id)
+    setPendingDeviceIds((prev) => [...prev, ...ids])
+    setError(null)
+
+    try {
+      const results = await Promise.all(targets.map((d) => api.controlDevice(d.id, command)))
+      setDevices((prev) =>
+        prev.map((d) => {
+          const result = results.find((r) => r.deviceId === d.id)
+          return result ? { ...d, currentState: result.state } : d
+        }),
+      )
+    } catch (e) {
+      setError(
+        e.status === 503
+          ? 'Có thiết bị không phản hồi. Kiểm tra ESP32 và broker MQTT còn chạy không.'
+          : e.message,
+      )
+      api.getDevices().then(setDevices).catch(() => {})
+    } finally {
+      setPendingDeviceIds((prev) => prev.filter((id) => !ids.includes(id)))
+    }
+  }, [])
+
   const value = {
     latest,
     readings,
@@ -126,6 +164,7 @@ export function AppStoreProvider({ children }) {
     error,
     clearError: () => setError(null),
     toggleDevice,
+    toggleAll,
   }
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>

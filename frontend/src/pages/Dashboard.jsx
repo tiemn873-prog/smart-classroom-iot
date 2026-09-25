@@ -11,13 +11,13 @@ const STAT_CARDS = [
 
 // Độ ẩm & nhiệt độ theo trục trái (0-100), ánh sáng theo trục phải (0-1000)
 const SERIES = [
-  { key: 'humidity', label: 'Độ ẩm', color: '#1d4ed8', axis: 'left' },
-  { key: 'light', label: 'Ánh sáng', color: '#a96b08', axis: 'right' },
-  { key: 'temperature', label: 'Nhiệt độ', color: '#c2410c', axis: 'left' },
+  { key: 'humidity', label: 'Độ ẩm', color: '#1c7ed6', axis: 'left' },
+  { key: 'light', label: 'Ánh sáng', color: '#e08b0b', axis: 'right' },
+  { key: 'temperature', label: 'Nhiệt độ', color: '#d64545', axis: 'left' },
 ]
 
-const AXIS_COLOR = '#667085'
-const GRID_COLOR = '#e5e8ec'
+const AXIS_COLOR = '#6b7787'
+const GRID_COLOR = '#e8ecf3'
 
 export default function Dashboard() {
   const { latest, readings, devices, hardwareOnline, pendingDeviceIds, loading, error, clearError, toggleDevice } =
@@ -48,7 +48,7 @@ export default function Dashboard() {
         {STAT_CARDS.map(({ key, label, unit, tone, icon: Icon, format }) => {
           const value = latest ? latest[key] : null
           return (
-            <div key={key} className="card stat-card">
+            <div key={key} className={`card stat-card ${tone}`}>
               <div className="stat-head">
                 <span className="stat-label">{label}</span>
                 <span className={`stat-icon ${tone}`}>
@@ -77,7 +77,8 @@ export default function Dashboard() {
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -8 }}>
-                <CartesianGrid stroke={GRID_COLOR} />
+                {/* Chi ke duong ngang, bo duong doc cho do roi mat */}
+                <CartesianGrid stroke={GRID_COLOR} vertical={false} />
                 <XAxis
                   dataKey="clock"
                   stroke={AXIS_COLOR}

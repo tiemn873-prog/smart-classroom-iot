@@ -568,6 +568,21 @@ select {
   cursor: pointer;
   transition: background 0.15s;
 }
+
+.history-card .filter-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Khung xep doc nen khong duoc de o tim kiem gian theo chieu cao,
+   neu khong no se keo cao bang ca the. */
+.history-card .search-box {
+  flex: 0 0 auto;
+}
+
 /* ---------- Bảng ---------- */
 .table-card {
   flex: 1 1 auto;
@@ -584,6 +599,7 @@ select {
   overflow: auto;
 }
 
+.history-card .filter-area,
 .table-footer {
   flex-shrink: 0;
 }

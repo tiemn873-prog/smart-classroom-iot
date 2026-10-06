@@ -1,8 +1,11 @@
 package vn.ptit.smartclass.service;
 
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.ptit.smartclass.dto.Dtos;
@@ -130,4 +133,56 @@ public class SensorService {
         return history;
     }
 
+    /** GET /api/sensors - tra cuu lich su co loc, sap xep, phan trang */
+    @Transactional(readOnly = true)
+    public Dtos.PageResponse<Dtos.MetricDto> search(String keyword, String sensorType,
+                                                    String sort, int page, int size, LocalDateTime measuredAt, Double value) {
+        Sort.Direction direction = "ASC".equalsIgnoreCase(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, Sort.by(direction, "timestamp", "id"));
+
+        Specification<EnvironmentalMetric> spec = (root, query, cb) -> {
+            List<Predicate> conditions = new ArrayList<>();
+            if (measuredAt != null) {
+                LocalDateTime start = measuredAt.withSecond(0).withNano(0);
+                conditions.add(cb.greaterThanOrEqualTo(root.<LocalDateTime>get("timestamp"), start));
+                conditions.add(cb.lessThan(root.<LocalDateTime>get("timestamp"), start.plusMinutes(1)));
+            }
+            if (value != null) {
+                conditions.add(cb.equal(root.get("readingValue"), value));
+            }
+
+
+            if (sensorType != null && !sensorType.isBlank() && !"ALL".equalsIgnoreCase(sensorType)) {
+                conditions.add(cb.equal(root.get("sensor").get("category"), sensorType));
+            }
+            if (keyword != null && !keyword.isBlank()) {
+                String term = "%" + keyword.trim().replace("#", "") + "%";
+
+                /* Doi timestamp sang dung chuoi ma nguoi dung nhin thay tren man
+                   hinh (25-09-2026 21:33:41) roi moi so khop. Neu so khop thang
+                   voi kieu luu trong CSDL (2026-09-25...) thi go y nhu tren man
+                   hinh lai khong ra ket qua nao. */
+                Expression<String> thoiGianHienThi = cb.function(
+                        "date_format", String.class,
+                        root.get("timestamp"), cb.literal("%d-%m-%Y %H:%i:%s"));
+
+                conditions.add(cb.or(
+                        cb.like(thoiGianHienThi, term),
+                        cb.like(root.get("readingValue").as(String.class), term)));
+            }
+            return cb.and(conditions.toArray(new Predicate[0]));
+        };
+
+        Page<EnvironmentalMetric> result = metricRepository.findAll(spec, pageable);
+        List<Dtos.MetricDto> items = result.getContent().stream()
+                .map(m -> new Dtos.MetricDto(
+                        m.getId(),
+                        m.getSensor().getCategory(),
+                        m.getSensor().getUnitLabel(),
+                        m.getReadingValue(),
+                        m.getTimestamp()))
+                .toList();
+
+        return new Dtos.PageResponse<>(items, page, size, result.getTotalElements(), result.getTotalPages());
+    }
 }

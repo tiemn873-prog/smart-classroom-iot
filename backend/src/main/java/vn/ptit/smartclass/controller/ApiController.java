@@ -63,6 +63,19 @@ public class ApiController {
         return sensorService.getLatest();
     }
 
+    /** GET /api/sensors - lich su do dac, co loc va phan trang */
+    @GetMapping("/sensors")
+    public Dtos.PageResponse<Dtos.MetricDto> getSensors(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime measuredAt,
+            @RequestParam(required = false) Double value,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "ALL") String sensorType,
+            @RequestParam(required = false, defaultValue = "DESC") String sort,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return sensorService.search(keyword, sensorType, sort, page, Math.min(Math.max(size, 1), 200), measuredAt, value);
+    }
+
     /** GET /api/action-history - nhat ky dieu khien thiet bi */
     @GetMapping("/action-history")
     public Dtos.PageResponse<Dtos.ControlLogDto> getActionHistory(

@@ -49,6 +49,7 @@ Database `smart_class` tự được tạo, 5 bảng tự sinh từ các `@Entit
 | GET | `/api/devices` | Danh sách thiết bị + trạng thái |
 | POST | `/api/devices/control/{id}` | Bật/tắt thiết bị, body `{"command":"TURN_ON"}` |
 | GET | `/api/sensors/latest` | Số đo mới nhất + 12 điểm cho biểu đồ |
+| GET | `/api/sensors` | Lịch sử cảm biến, tham số `measuredAt`, `value`, `sensorType`, `sort`, `page`, `size` (h? tr? th?m `keyword`) |
 | GET | `/api/action-history` | Nhật ký điều khiển, tham số `operatedAt`, `deviceId`, `command`, `status`, `sort`, `page`, `size` (h? tr? th?m `keyword`) |
 
 ## WebSocket

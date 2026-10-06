@@ -21,3 +21,7 @@ mqtt/passwd
 .idea/
 Thumbs.db
 desktop.ini
+
+# Local database and MQTT credentials
+backend/backend-private.properties
+backend/reset-mysql-root.ps1

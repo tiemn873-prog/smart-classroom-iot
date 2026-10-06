@@ -119,14 +119,10 @@ export function AppStoreProvider({ children }) {
     }
   }, [])
 
-  /* Bat hoac tat toan bo thiet bi cung luc.
-     Gui song song bang Promise.all chu khong gui lan luot: hai lenh roi
-     may gan nhu cung mot thoi diem nen hai den doi trang thai gan nhu
-     dong thoi, mat thuong khong thay lech. */
+  /* Cong tac tong gui mot request; Backend dieu khien song song cac thiet bi. */
   const toggleAll = useCallback(async (turnOn) => {
-    const command = turnOn ? 'TURN_ON' : 'TURN_OFF'
-    // Chi gui cho thiet bi dang khac trang thai mong muon, khoi gui lenh thua
-    const targets = devicesRef.current.filter((d) => (d.currentState === 'ON') !== turnOn)
+    if (pendingRef.current.length > 0) return
+    const targets = devicesRef.current
     if (targets.length === 0) return
 
     const ids = targets.map((d) => d.id)
@@ -134,7 +130,7 @@ export function AppStoreProvider({ children }) {
     setError(null)
 
     try {
-      const results = await Promise.all(targets.map((d) => api.controlDevice(d.id, command)))
+      const { data: results } = await api.controlAll(turnOn ? 'ON' : 'OFF')
       setDevices((prev) =>
         prev.map((d) => {
           const result = results.find((r) => r.deviceId === d.id)
@@ -142,6 +138,12 @@ export function AppStoreProvider({ children }) {
         }),
       )
     } catch (e) {
+      if (e.body?.data) {
+        setDevices((prev) => prev.map((d) => {
+          const result = e.body.data.find((r) => r.deviceId === d.id && r.status === 'SUCCESS')
+          return result ? { ...d, currentState: result.state } : d
+        }))
+      }
       setError(
         e.status === 503
           ? 'Có thiết bị không phản hồi. Kiểm tra ESP32 và broker MQTT còn chạy không.'

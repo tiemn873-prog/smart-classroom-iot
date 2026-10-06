@@ -5,9 +5,9 @@ import { api } from '../api/client.js'
 /** Thẻ tài nguyên: link lấy từ bảng user_profiles, chưa có thì để '#' */
 const RESOURCES = [
   { key: 'githubUrl', title: 'Kho lưu trữ GitHub', sub: 'Source code & project files', icon: IconGithub, tone: 'green' },
-  { key: 'reportPdfUrl', title: 'Tài liệu SRS (PDF)', sub: 'Đặc tả yêu cầu hệ thống', icon: IconFilePdf, tone: 'yellow' },
+  { key: 'reportPdfUrl', title: 'Tài liệu báo cáo', sub: 'Tài liệu tổng hợp hệ thống Smart Class IoT', icon: IconFilePdf, tone: 'yellow' },
   { key: 'figmaUrl', title: 'Bản thiết kế Figma', sub: 'UI/UX design files & components', icon: IconFigma, tone: 'pink' },
-  { key: 'apiDocsUrl', title: 'Tham khảo API (Postman)', sub: 'RESTful API collection', icon: IconApi, tone: 'orange' },
+  { key: 'apiDocsUrl', title: 'Tham khảo API', sub: 'Tài liệu các REST API của hệ thống', icon: IconApi, tone: 'orange' },
 ]
 
 function initialsOf(fullName) {
@@ -76,7 +76,8 @@ export default function Profile() {
       <h3 className="section-label">Tài liệu & Tài nguyên</h3>
       <section className="resource-grid">
         {RESOURCES.map(({ key, title, sub, icon: Icon, tone }) => (
-          <a key={key} className="card resource-card" href={profile?.[key] || '#'}>
+          <a key={key} className="card resource-card" href={profile?.[key] || '#'}
+            target={profile?.[key] ? '_blank' : undefined} rel={profile?.[key] ? 'noopener noreferrer' : undefined}>
             <span className={`resource-icon ${tone}`}>
               <Icon width={20} height={20} />
             </span>

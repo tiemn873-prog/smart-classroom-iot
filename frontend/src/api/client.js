@@ -25,14 +25,17 @@ async function request(path, options) {
 
   if (!response.ok) {
     let message = `Backend trả lỗi ${response.status}`
+    let errorBody = null
     try {
       const body = await response.json()
+      errorBody = body
       if (body && body.message) message = body.message
     } catch {
       // body không phải JSON thì giữ nguyên thông báo mặc định
     }
     const error = new Error(message)
     error.status = response.status
+    error.body = errorBody
     throw error
   }
 
@@ -44,6 +47,8 @@ export const api = {
   getDevices: () => request('/devices'),
   controlDevice: (id, command) =>
     request(`/devices/control/${id}`, { method: 'POST', body: JSON.stringify({ command }) }),
+  controlAll: (action) =>
+    request('/devices/control-all', { method: 'POST', body: JSON.stringify({ action }) }),
   getLatestSensors: () => request('/sensors/latest'),
   getSensors: (params) => request('/sensors' + toQuery(params)),
   getActionHistory: (params) => request('/action-history' + toQuery(params)),

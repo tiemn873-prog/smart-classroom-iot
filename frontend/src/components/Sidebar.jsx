@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { IconBulb, IconDatabase, IconGrid, IconHistory } from './Icons.jsx'
+import { IconBulb, IconDatabase, IconGrid, IconHistory, IconUser } from './Icons.jsx'
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Bảng điều khiển', icon: IconGrid },
   { to: '/data-sensor', label: 'Dữ liệu cảm biến', icon: IconDatabase },
   { to: '/action-history', label: 'Lịch sử hoạt động', icon: IconHistory },
+  { to: '/profile', label: 'Hồ sơ', icon: IconUser },
 ]
 
 export default function Sidebar() {

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import Pagination from '../components/Pagination.jsx'
-import { IconSearch } from '../components/Icons.jsx'
 import { SENSOR_TYPES, formatDateTime, formatValue } from '../data/labels.js'
 import { api } from '../api/client.js'
 
-const EMPTY_FILTER = { keyword: '', sensorType: 'ALL', sort: 'DESC' }
+const EMPTY_FILTER = { measuredAt: '', value: '', sensorType: 'ALL', sort: 'DESC' }
 const EMPTY_PAGE = { items: [], total: 0, totalPages: 1 }
 
 export default function DataSensor() {
@@ -45,6 +44,12 @@ export default function DataSensor() {
 
   const update = (field) => (e) => setDraft((d) => ({ ...d, [field]: e.target.value }))
 
+  const resetFilters = () => {
+    setDraft({ ...EMPTY_FILTER })
+    setApplied({ ...EMPTY_FILTER })
+    setPage(1)
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     setApplied(draft)
@@ -75,27 +80,37 @@ export default function DataSensor() {
 
       {error && <div className="alert">{error}</div>}
 
-      <form className="card filter-card" onSubmit={handleSubmit}>
-        <div className="filter-row">
-          <label className="search-box">
-            <IconSearch width={15} height={15} />
-            <input type="text" placeholder="Tìm theo thời gian hoặc giá trị..." value={draft.keyword} onChange={update('keyword')} />
+      <form className="card filter-card filter-panel" onSubmit={handleSubmit}>
+        <h2 className="filter-title">Bộ lọc dữ liệu cảm biến</h2>
+        <div className="filter-fields">
+          <label className="filter-field">
+            <span>Loại cảm biến</span>
+            <select value={draft.sensorType} onChange={update('sensorType')}>
+              <option value="ALL">Tất cả loại cảm biến</option>
+              {Object.entries(SENSOR_TYPES).map(([value, type]) => (
+                <option key={value} value={value}>{type.label}</option>
+              ))}
+            </select>
           </label>
-          <select value={draft.sensorType} onChange={update('sensorType')} aria-label="Loại cảm biến">
-            <option value="ALL">Tất cả loại cảm biến</option>
-            {Object.entries(SENSOR_TYPES).map(([value, type]) => (
-              <option key={value} value={value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-          <select value={draft.sort} onChange={update('sort')} aria-label="Sắp xếp">
-            <option value="DESC">Thời gian / ID (Mới nhất)</option>
-            <option value="ASC">Thời gian / ID (Cũ nhất)</option>
-          </select>
-          <button type="submit" className="btn-filter">
-            Lọc
-          </button>
+          <label className="filter-field">
+            <span>Sắp xếp theo thời gian</span>
+            <select value={draft.sort} onChange={update('sort')}>
+              <option value="DESC">Mới nhất trước (Giảm dần)</option>
+              <option value="ASC">Cũ nhất trước (Tăng dần)</option>
+            </select>
+          </label>
+          <label className="filter-field">
+            <span>Thời điểm đo</span>
+            <input type="datetime-local" step="60" value={draft.measuredAt} onChange={update('measuredAt')} />
+          </label>
+          <label className="filter-field">
+            <span>Giá trị cảm biến</span>
+            <input type="number" step="any" placeholder="Nhập giá trị" value={draft.value} onChange={update('value')} />
+          </label>
+        </div>
+        <div className="filter-actions">
+          <button type="button" className="btn-reset" onClick={resetFilters}>Đặt lại</button>
+          <button type="submit" className="btn-filter">Tìm kiếm</button>
         </div>
       </form>
 

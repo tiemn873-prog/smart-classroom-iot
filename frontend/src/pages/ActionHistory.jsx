@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import Pagination from '../components/Pagination.jsx'
-import { IconSearch } from '../components/Icons.jsx'
 import { COMMAND_LABELS, SYNC_STATUS, formatDateTime } from '../data/labels.js'
 import { api } from '../api/client.js'
 import { useAppStore } from '../store/AppStore.jsx'
 
-const EMPTY_FILTER = { keyword: '', deviceId: 'ALL', command: 'ALL', status: 'ALL', sort: 'DESC' }
+const EMPTY_FILTER = { operatedAt: '', deviceId: 'ALL', command: 'ALL', status: 'ALL', sort: 'DESC' }
 const EMPTY_PAGE = { items: [], total: 0, totalPages: 1 }
 
 export default function ActionHistory() {
@@ -27,7 +26,7 @@ export default function ActionHistory() {
 
     api
       .getActionHistory({
-        keyword: applied.keyword,
+        operatedAt: applied.operatedAt,
         deviceId: applied.deviceId === 'ALL' ? undefined : applied.deviceId,
         command: applied.command,
         status: applied.status,
@@ -70,6 +69,12 @@ export default function ActionHistory() {
 
   const update = (field) => (e) => setDraft((d) => ({ ...d, [field]: e.target.value }))
 
+  const resetFilters = () => {
+    setDraft({ ...EMPTY_FILTER })
+    setApplied({ ...EMPTY_FILTER })
+    setPage(1)
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     setApplied(draft)
@@ -101,45 +106,50 @@ export default function ActionHistory() {
       {error && <div className="alert">{error}</div>}
 
       <section className="card table-card history-card">
-        <form className="filter-area" onSubmit={handleSubmit}>
-          <label className="search-box">
-            <IconSearch width={15} height={15} />
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo thời gian..."
-              value={draft.keyword}
-              onChange={update('keyword')}
-            />
-          </label>
-          <div className="filter-row">
-            <select value={draft.deviceId} onChange={update('deviceId')} aria-label="Thiết bị">
-              <option value="ALL">Tất cả thiết bị</option>
-              {devices.map((d) => (
-                <option key={d.id} value={String(d.id)}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-            <select value={draft.command} onChange={update('command')} aria-label="Hành động">
-              <option value="ALL">Tất cả hành động</option>
-              <option value="TURN_ON">Bật</option>
-              <option value="TURN_OFF">Tắt</option>
-            </select>
-            <select value={draft.status} onChange={update('status')} aria-label="Trạng thái">
-              <option value="ALL">Tất cả trạng thái</option>
-              {Object.entries(SYNC_STATUS).map(([value, meta]) => (
-                <option key={value} value={value}>
-                  {meta.label}
-                </option>
-              ))}
-            </select>
-            <select value={draft.sort} onChange={update('sort')} aria-label="Sắp xếp">
-              <option value="DESC">Thời gian / ID (Mới nhất)</option>
-              <option value="ASC">Thời gian / ID (Cũ nhất)</option>
-            </select>
-            <button type="submit" className="btn-filter">
-              Lọc
-            </button>
+        <form className="filter-area filter-panel" onSubmit={handleSubmit}>
+          <h2 className="filter-title">Bộ lọc lịch sử hoạt động</h2>
+          <div className="filter-fields">
+            <label className="filter-field">
+              <span>Thiết bị</span>
+              <select value={draft.deviceId} onChange={update('deviceId')}>
+                <option value="ALL">Tất cả thiết bị</option>
+                {devices.map((d) => <option key={d.id} value={String(d.id)}>{d.name}</option>)}
+              </select>
+            </label>
+            <label className="filter-field">
+              <span>Loại hành động</span>
+              <select value={draft.command} onChange={update('command')}>
+                <option value="ALL">Tất cả hành động</option>
+                <option value="TURN_ON">Bật</option>
+                <option value="TURN_OFF">Tắt</option>
+              </select>
+            </label>
+            <label className="filter-field">
+              <span>Trạng thái thực hiện</span>
+              <select value={draft.status} onChange={update('status')}>
+                <option value="ALL">Tất cả trạng thái</option>
+                {Object.entries(SYNC_STATUS).map(([value, meta]) => (
+                  <option key={value} value={value}>{meta.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="filter-field">
+              <span>Sắp xếp theo thời gian</span>
+              <select value={draft.sort} onChange={update('sort')}>
+                <option value="DESC">Mới nhất trước (Giảm dần)</option>
+                <option value="ASC">Cũ nhất trước (Tăng dần)</option>
+              </select>
+            </label>
+          </div>
+          <div className="filter-bottom">
+            <label className="filter-field">
+              <span>Thời điểm thao tác</span>
+              <input type="datetime-local" step="60" value={draft.operatedAt} onChange={update('operatedAt')} />
+            </label>
+            <div className="filter-actions">
+              <button type="button" className="btn-reset" onClick={resetFilters}>Đặt lại</button>
+              <button type="submit" className="btn-filter">Tìm kiếm</button>
+            </div>
           </div>
         </form>
 

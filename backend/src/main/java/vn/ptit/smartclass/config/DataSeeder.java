@@ -57,6 +57,10 @@ public class DataSeeder implements CommandLineRunner {
         profile.setEmail("tiemn873@gmail.com");
         profile.setLocation("Hà Nội, Việt Nam");
         profile.setAvatarUrl("/anh-dai-dien.png");
+        profile.setGithubUrl("https://github.com/tiemn873-prog/smart-classroom-iot");
+        profile.setFigmaUrl("https://www.figma.com/design/T5ec1lS0OuP7KCTMGLSSbw/Codia-AI-Figma-to-code--Figma-to-full-stack-Web-and-Mobile-apps--Communaut%25C3%25A9-?node-id=0-1&p=f&t=oE5s76b7eYnkXDSG-0");
+        profile.setReportPdfUrl("https://docs.google.com/document/d/10HwIWbWv6JUbPiqKqpipuQHJBSmcB52lpSm_Wpbzsgo/edit?tab=t.0");
+        profile.setApiDocsUrl("https://tiemn873-1910835.postman.co/workspace/B23DCCN813-Nguy%E1%BB%85n-D%E1%BB%A5ng-Ti%E1%BB%81m's-W~ac3fbaf4-71ad-4756-8081-5f6322e100d1/request/53525606-aac5d2a7-53de-4194-bb08-d91536e8dc36?action=share&creator=53525606");
         profile.setBio("Sinh viên thực hiện đề tài Hệ thống quản lý lớp học thông minh");
         profileRepository.save(profile);
         log.info("[SEED] Da cap nhat ho so sinh vien");

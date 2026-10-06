@@ -48,9 +48,14 @@ Database `smart_class` tự được tạo, 5 bảng tự sinh từ các `@Entit
 | GET | `/api/profile` | Hồ sơ tác giả |
 | GET | `/api/devices` | Danh sách thiết bị + trạng thái |
 | POST | `/api/devices/control/{id}` | Bật/tắt thiết bị, body `{"command":"TURN_ON"}` |
+| POST | `/api/devices/control-all` | Bật/tắt toàn bộ thiết bị, body `{"action":"ON"}` hoặc `{"action":"OFF"}`; 200 nếu tất cả thành công, 503 nếu có thiết bị quá hạn; `data` chứa kết quả từng thiết bị |
 | GET | `/api/sensors/latest` | Số đo mới nhất + 12 điểm cho biểu đồ |
 | GET | `/api/sensors` | Lịch sử cảm biến, tham số `measuredAt`, `value`, `sensorType`, `sort`, `page`, `size` (h? tr? th?m `keyword`) |
 | GET | `/api/action-history` | Nhật ký điều khiển, tham số `operatedAt`, `deviceId`, `command`, `status`, `sort`, `page`, `size` (h? tr? th?m `keyword`) |
+
+## Điều khiển toàn bộ thiết bị
+
+Công tắc tổng gửi một yêu cầu tới `/api/devices/control-all`. Backend gửi lệnh song song cho từng thiết bị qua MQTT và chờ phản hồi tối đa 3 giây cho mỗi lệnh. Mỗi thiết bị có `logId` (requestId) và nhật ký riêng. Phản hồi chứa `success`, `code`, `message`, `data`; mỗi phần tử `data` có `logId`, `deviceId`, `deviceCode`, `state`, `status` (SUCCESS/TIMEOUT). Khi có thiết bị quá hạn, phản hồi 503 vẫn chứa kết quả các thiết bị đã thành công; không hoàn tác thiết bị đó.
 
 ## WebSocket
 

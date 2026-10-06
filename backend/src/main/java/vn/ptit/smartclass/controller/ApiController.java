@@ -1,6 +1,7 @@
 package vn.ptit.smartclass.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import vn.ptit.smartclass.dto.Dtos;
@@ -55,6 +56,21 @@ public class ApiController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thieu truong command");
         }
         return deviceControlService.controlDevice(id, request.command().trim().toUpperCase());
+    }
+
+    /** POST /api/devices/control-all - body {"action":"ON"} hoac {"action":"OFF"}. */
+    @PostMapping("/devices/control-all")
+    public ResponseEntity<Dtos.ControlAllResponse> controlAll(@RequestBody Dtos.ControlAllRequest request) {
+        if (request == null || request.action() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thieu truong action");
+        }
+        List<Dtos.ControlResponse> results = deviceControlService.controlAll(
+                request.action().trim().toUpperCase(java.util.Locale.ROOT));
+        boolean success = results.stream().allMatch(result -> "SUCCESS".equals(result.status()));
+        int code = success ? 200 : 503;
+        String message = success ? "Dieu khien toan bo thiet bi thanh cong"
+                : "Co thiet bi khong phan hoi trong thoi gian cho";
+        return ResponseEntity.status(code).body(new Dtos.ControlAllResponse(success, code, message, results));
     }
 
     /** GET /api/sensors/latest - so do moi nhat + 12 diem cho bieu do */

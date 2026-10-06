@@ -27,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.Executors;
 
 /**
  * Dieu khien thiet bi theo co che MOT PHA.
@@ -82,6 +83,33 @@ public class DeviceControlService {
      * nho vay web chi doi trang thai khi thiet bi that su da doi.
      */
     public Dtos.ControlResponse controlDevice(Long deviceId, String command) {
+        Dtos.ControlResponse result = executeControl(deviceId, command);
+        if (!STATUS_SUCCESS.equals(result.status())) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Thiet bi khong phan hoi trong " + timeoutMs + "ms");
+        }
+        return result;
+    }
+
+    /** Mot REST request, gui lenh song song va thu ket qua rieng tung thiet bi. */
+    public List<Dtos.ControlResponse> controlAll(String action) {
+        String command = switch (action) {
+            case "ON" -> "TURN_ON";
+            case "OFF" -> "TURN_OFF";
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "action chi nhan ON hoac OFF");
+        };
+        List<SmartDevice> devices = deviceRepository.findAllByOrderByIdAsc();
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<CompletableFuture<Dtos.ControlResponse>> tasks = devices.stream()
+                    .map(device -> CompletableFuture.supplyAsync(
+                            () -> executeControl(device.getId(), command), executor))
+                    .toList();
+            return tasks.stream().map(CompletableFuture::join).toList();
+        }
+    }
+
+    private Dtos.ControlResponse executeControl(Long deviceId, String command) {
         if (!"TURN_ON".equals(command) && !"TURN_OFF".equals(command)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "command chi nhan TURN_ON hoac TURN_OFF");
@@ -116,14 +144,14 @@ public class DeviceControlService {
         } catch (TimeoutException e) {
             // Qua han -> ghi TIMEOUT, giu nguyen current_state vi khong biet thuc te ra sao
             markTimeout(requestId);
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                    "Thiet bi khong phan hoi trong " + timeoutMs + "ms");
+            return new Dtos.ControlResponse(requestId, deviceId, device.getDeviceCode(),
+                    device.getCurrentState(), STATUS_TIMEOUT);
 
         } catch (Exception e) {
             markTimeout(requestId);
-            Thread.currentThread().interrupt();
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                    "Loi khi cho thiet bi phan hoi: " + e.getMessage());
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            return new Dtos.ControlResponse(requestId, deviceId, device.getDeviceCode(),
+                    device.getCurrentState(), STATUS_TIMEOUT);
 
         } finally {
             pendingRequests.remove(requestId);

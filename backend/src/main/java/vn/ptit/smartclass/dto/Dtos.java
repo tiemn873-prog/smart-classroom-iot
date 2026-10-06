@@ -48,6 +48,13 @@ public final class Dtos {
     public record ControlRequest(String command) {
     }
 
+    public record ControlAllRequest(String action) {
+    }
+
+    public record ControlAllResponse(boolean success, int code, String message,
+                                     List<ControlResponse> data) {
+    }
+
     /** Ket qua dieu khien thiet bi */
     public record ControlResponse(Long logId, Long deviceId, String deviceCode, String state, String status) {
     }
